@@ -1,0 +1,179 @@
+#!/bin/bash
+# by Mike Rodarte (mts7777777)
+#
+# Handle all the necessary server commands
+#    start | stop | restart | status | bfull | bquick | check
+
+# Change to your Minecraft directory
+dir="/usr/games/minecraft"
+# Change to your Minecraft server file
+serverFile="craftbukkit-172.jar"
+# Change to your screen name
+screenName="minecraft"
+# Change to your minimum memory
+memMin="256M"
+# Change to your maximum memory
+memMax="640M"
+# Change to your backup directory
+backupDir="/usr/games/backups"
+# Change to your tar backup exclude string
+excludeStr=" --exclude='plugins/dynmap' --exclude='logs'"
+# End changes
+
+PID=$(get_pid)
+dateFormat="%Y-%m-%d_%H:%M:%S"
+
+# Get pid of server
+function get_pid {
+    PID=`ps -elf | grep $serverFile | grep -v "grep" | awk '{print $4}'`
+    echo $PID > $dir/minecraft.pid
+    echo $PID
+}
+
+# Start server if not started already
+function server_start {
+    msg=$(server_status)
+    if [[ $msg == *Started* ]]
+    then
+        echo "Error starting server, server already started with ID $PID"
+    else
+        screen -r $screenName -X stuff "java -Xms$memMin -Xmx$memMax -jar $dir/$serverFile nogui"`echo -ne '\015'`
+        get_pid
+        echo "Please wait while the server prepares..."
+        while true
+        do
+            out=$(tail -n 1 $dir/logs/latest.log 2> /dev/null| grep Done)
+            if [ -n "$out" ]; then
+                newPid=$(get_pid)
+                echo "Started server with PID $newPid"
+                break;
+            fi
+        done
+    fi
+}
+
+# Stop server if not stopped already
+function server_stop {
+    fpid=`cat $dir/minecraft.pid`
+    if [ "$fpid" == "" ]; then
+        echo "server is already stopped"
+    else
+        echo "saving game and stopping server..."
+        screen -r $screenName -X stuff ''
+        sleep 5
+        newPid=$(get_pid)
+        #echo "$PID | $fpid | $newPid"
+        if [ "$PID" == "$newPid" ]
+        then
+            echo "Error stopping server; server is still running."
+        else
+            echo "Stopped server process $PID"
+        fi
+    fi
+}
+
+# Stop and start the server
+function server_restart {
+    msg=$(server_stop)
+    if [[ $msg == Error* ]]
+    then
+        echo $msg
+        echo "Aborting restart"
+    else
+        echo $msg
+        server_start
+        echo "Server restart complete"
+    fi
+}
+
+# Display status of server
+function server_status {
+    newPid=$(get_pid)
+    if [ "$newPid" != "" ] 
+    then
+        echo "Server Started at $newPid"
+    else
+        echo "Server not running"
+    fi
+}
+
+# Execute the backup script
+function server_backup {
+    start=$(date +${dateFormat})
+    screen -r $screenName -X stuff "say Backup starting at ${start}. World no longer saving!... $(printf '\r')"
+    screen -r $screenName -X stuff "save-off $(printf '\r')"
+    screen -r $screenName -X stuff "save-all $(printf '\r')"
+    today=$(date +"%Y-%m-%d-%H")
+
+    # Change to your Minecraft directory
+    cd $dir
+    # Change to what you want to exclude from the backup
+    command="tar -cvzf $backupDir/mcbackup_$today.tar.gz * $1"
+    # End changes
+
+    eval $command
+    screen -r $screenName -X stuff "save-on $(printf '\r')"
+    end=$(date +${dateFormat})
+    screen -r $screenName -X stuff "say Backup complete at ${end}! World now saving. $(printf '\r')" 
+}
+
+# Check to see if the server is started and start it if not
+function server_check {
+    if [ "$PID" == "" ]
+    then
+        server_start
+    else
+        echo "Server running with process $PID"
+    fi
+}
+
+# Display acceptable parameters
+function list_commands {
+    echo ""
+    echo "mserver by Mike Rodarte (mts7777777)"
+    echo ""
+    echo "Basic Usage: "
+    echo ""
+    echo "start    - start the server"
+    echo "stop     - stop the server"
+    echo "restart  - stop and start the server"
+    echo "status   - display server status"
+    echo "check    - start the server if not already started"
+    echo "bquick   - do a quick backup (excluding $excludeStr)"
+    echo "bfull    - do a full backup (without excluding things)"
+    echo "help     - display this message"
+    echo ""
+    echo "Configure these variables at the top of the script for this to work properly."
+    echo ""
+    echo "dir: $dir (your Minecraft directory)"
+    echo "serverFile: $serverFile (your Minecraft server jar file)"
+    echo "screenName: $screenName (the name of the screen session)"
+    echo "memMin: $memMin (minimum memory to allocate)"
+    echo "memMax: $memMax (maximum memory to allocate)"
+    echo "backupDir: $backupDir (directory to save backup files)"
+    echo "excludeStr: $excludeStr (string appended to tar command in server_backup function)"
+    echo ""
+    echo "Note: If you want to exclude additional files or directories in the full (or quick) backup, add the exclude='file' string in the backup script."
+    echo ""
+}
+
+# process command line arguments
+if [ $# -eq 0 ]; then
+    list_commands
+fi
+
+while [ $# -gt 0 ]
+do
+    case "$1" in
+        start)   server_start; shift;;
+        stop)    server_stop; shift;;
+        restart) server_restart; shift;;
+        status)  server_status; shift;;
+        bfull)   server_backup ""; shift;;
+        bquick)  server_backup "$excludeStr"; shift;;
+        check)   server_check; shift;;
+        help)    list_commands; shift;;
+    esac
+    shift
+done
+

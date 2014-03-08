@@ -1,0 +1,8 @@
+# Minecraft server crontab to check and backup Minecraft server
+# by Mike Rodarte (mts7777777)
+# 
+# add these values to your crontab
+# Change to your Minecraft directory
+*/15 *   *  * *  /usr/games/minecraft/mserver check> /dev/null
+1    */8 *  * *  /usr/games/minecraft/mserver bquick > /dev/null
+33   11  *  * 1  /usr/games/minecraft/mserver bfull > /dev/null
