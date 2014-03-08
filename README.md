@@ -40,4 +40,3 @@ it. This file is used for checking server status.
 Restart checks to see if the server is stopped or not, and if it is not, then 
 restart will stop the server. Start will check to see if the server is started 
 and will start the server if it is stopped.
-================================================================================
