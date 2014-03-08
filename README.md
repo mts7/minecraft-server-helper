@@ -3,8 +3,8 @@ minecraft-server-helper
 
 Minecraft Server Helper Tool to manage the server, backup files, and show status
 
-Minecraft Server helpers by Mike Rodarte (mts7777777)
-2014-03-07
+Author:  Mike Rodarte (mts7777777)
+Created: 2014-03-07
 
 Thank you for downloading my files! I hope these prove useful for you with your
 Minecraft server experiences. I've included useful functions in this file for 
