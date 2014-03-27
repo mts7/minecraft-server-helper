@@ -20,7 +20,6 @@ backupDir="/usr/games/backups"
 excludeStr=" --exclude='plugins/dynmap' --exclude='logs'"
 # End changes
 
-PID=$(get_pid)
 dateFormat="%Y-%m-%d_%H:%M:%S"
 
 # Get pid of server
@@ -29,6 +28,8 @@ function get_pid {
     echo $PID > $dir/minecraft.pid
     echo $PID
 }
+
+PID=$(get_pid)
 
 # Start server if not started already
 function server_start {
