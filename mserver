@@ -118,7 +118,9 @@ function server_backup {
     screen -r $screenName -X stuff "say Backup complete at ${end}! World now saving. $(printf '\r')" 
 
     # remove backup files more than 6 days old
-    find $backupDir -mtime +6 -exec rf -f {} \;
+    command="find $backupDir -mtime +6 -exec rf -f {} \;"
+    echo "executing $command"
+    eval $command
 }
 
 # Check to see if the server is started and start it if not
