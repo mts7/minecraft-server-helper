@@ -38,7 +38,7 @@ function server_start {
     then
         echo "Error starting server, server already started with ID $PID"
     else
-        screen -r $screenName -X stuff "java -Xms$memMin -Xmx$memMax -jar $dir/$serverFile nogui"`echo -ne '\015'`
+        screen -r $screenName -X stuff "java -Xms256M -Xmx640M -XX:+UseFastAccessorMethods -XX:+AggressiveOpts  -XX:+DisableExplicitGC -XX:+UseAdaptiveGCBoundary -XX:MaxGCPauseMillis=500 -XX:SurvivorRatio=16 -XX:+UseParallelGC -XX:UseSSE=3 -XX:ParallelGCThreads=2 -jar $dir/$serverFile nogui"`echo -ne '\015'`
         get_pid
         echo "Please wait while the server prepares..."
         while true
@@ -100,7 +100,7 @@ function server_status {
 
 # Execute the backup script
 function server_backup {
-    start=$(date +${dateFormat})
+    start=$(date +"${dateFormat}")
     screen -r $screenName -X stuff "say Backup starting at ${start}. World no longer saving!... $(printf '\r')"
     screen -r $screenName -X stuff "save-off $(printf '\r')"
     screen -r $screenName -X stuff "save-all $(printf '\r')"
@@ -114,11 +114,11 @@ function server_backup {
 
     eval $command
     screen -r $screenName -X stuff "save-on $(printf '\r')"
-    end=$(date +${dateFormat})
+    end=$(date +"${dateFormat}")
     screen -r $screenName -X stuff "say Backup complete at ${end}! World now saving. $(printf '\r')" 
 
     # remove backup files more than 6 days old
-    command="find $backupDir -mtime +6 -exec rf -f {} \;"
+    command="find $backupDir -mtime +6 -print | xargs /bin/rm -f"
     echo "executing $command"
     eval $command
 }
