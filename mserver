@@ -38,7 +38,7 @@ function server_start {
     then
         echo "Error starting server, server already started with ID $PID"
     else
-        screen -r $screenName -X stuff "java -Xms256M -Xmx640M -XX:+UseFastAccessorMethods -XX:+AggressiveOpts  -XX:+DisableExplicitGC -XX:+UseAdaptiveGCBoundary -XX:MaxGCPauseMillis=500 -XX:SurvivorRatio=16 -XX:+UseParallelGC -XX:UseSSE=3 -XX:ParallelGCThreads=2 -jar $dir/$serverFile nogui"`echo -ne '\015'`
+        screen -r $screenName -X stuff "java -Xms$memMin -Xmx$memMax -XX:+UseFastAccessorMethods -XX:+AggressiveOpts  -XX:+DisableExplicitGC -XX:+UseAdaptiveGCBoundary -XX:MaxGCPauseMillis=500 -XX:SurvivorRatio=16 -XX:+UseParallelGC -XX:UseSSE=3 -XX:ParallelGCThreads=2 -jar $dir/$serverFile nogui"`echo -ne '\015'`
         get_pid
         echo "Please wait while the server prepares..."
         while true
