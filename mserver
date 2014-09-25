@@ -38,6 +38,7 @@ function server_start {
     then
         echo "Error starting server, server already started with ID $PID"
     else
+        screen -r $screenName -X stuff "cd $dir"`echo -ne '\015'`
         screen -r $screenName -X stuff "java -Xms$memMin -Xmx$memMax -XX:+UseFastAccessorMethods -XX:+AggressiveOpts  -XX:+DisableExplicitGC -XX:+UseAdaptiveGCBoundary -XX:MaxGCPauseMillis=500 -XX:SurvivorRatio=16 -XX:+UseParallelGC -XX:UseSSE=3 -XX:ParallelGCThreads=2 -jar $dir/$serverFile nogui"`echo -ne '\015'`
         get_pid
         echo "Please wait while the server prepares..."
@@ -45,11 +46,14 @@ function server_start {
         do
             out=$(tail -n 1 $dir/logs/latest.log 2> /dev/null| grep Done)
             if [ -n "$out" ]; then
+                # keep going
                 newPid=$(get_pid)
                 echo "Started server with PID $newPid"
                 break;
             fi
-        done
+            sleep 1s
+            echo "checking file..."
+        done 
     fi
 }
 
@@ -115,7 +119,7 @@ function server_backup {
     eval $command
     screen -r $screenName -X stuff "save-on $(printf '\r')"
     end=$(date +"${dateFormat}")
-    screen -r $screenName -X stuff "say Backup complete at ${end}! World now saving. $(printf '\r')" 
+    screen -r $screenName -X stuff "say Backup complete at ${end}! World now saving. $(printf '\r')"
 
     # remove backup files more than 6 days old
     command="find $backupDir -mtime +6 -print | xargs /bin/rm -f"
