@@ -31,6 +31,14 @@ function get_pid {
 
 PID=$(get_pid)
 
+function screen_check {
+    numScreens=`screen -ls | grep -c "$screenName"`
+    if [ "$numScreens" -eq "0" ]; then
+        # start a new screen session
+        screen -S $screenName -d -m
+    fi
+}
+
 # Start server if not started already
 function server_start {
     msg=$(server_status)
@@ -38,6 +46,7 @@ function server_start {
     then
         echo "Error starting server, server already started with ID $PID"
     else
+        screen_check
         screen -r $screenName -X stuff "cd $dir"`echo -ne '\015'`
         screen -r $screenName -X stuff "java -Xms$memMin -Xmx$memMax -XX:+UseFastAccessorMethods -XX:+AggressiveOpts  -XX:+DisableExplicitGC -XX:+UseAdaptiveGCBoundary -XX:MaxGCPauseMillis=500 -XX:SurvivorRatio=16 -XX:+UseParallelGC -XX:UseSSE=3 -XX:ParallelGCThreads=2 -jar $dir/$serverFile nogui"`echo -ne '\015'`
         get_pid
@@ -63,6 +72,7 @@ function server_stop {
     if [ "$fpid" == "" ]; then
         echo "server is already stopped"
     else
+        screen_check
         echo "saving game and stopping server..."
         screen -r $screenName -X stuff ''
         sleep 5
@@ -105,6 +115,7 @@ function server_status {
 # Execute the backup script
 function server_backup {
     start=$(date +"${dateFormat}")
+    screen_check
     screen -r $screenName -X stuff "say Backup starting at ${start}. World no longer saving!... $(printf '\r')"
     screen -r $screenName -X stuff "save-off $(printf '\r')"
     screen -r $screenName -X stuff "save-all $(printf '\r')"
@@ -182,6 +193,7 @@ do
         bfull)   server_backup ""; shift;;
         bquick)  server_backup "$excludeStr"; shift;;
         check)   server_check; shift;;
+        screen)  screen_check; shift;;
         help)    list_commands; shift;;
     esac
     shift
