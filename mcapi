@@ -3,7 +3,6 @@
 #
 # Provide the Minecraft server command as a parameter to the script and view the results.
 #
-# TODO: add prompt for empty command
 # TODO: add shortcut commands (for give, tp, toggledownfall, etc.)
 # TODO: add screen check (maybe use mserver screen)
 # TODO: change sleep time to something smaller
@@ -31,10 +30,9 @@ first_line=$(($(cat $file | wc -l) + 1))
 cmd=$@
 
 # verify there is a value to use
-if [ -z "$cmd" ]; then
-    echo "please provide a command when calling this script"
-    exit 1
-fi
+while [ -z "$cmd" ]; do
+    read -p "Enter a command to pass to Minecraft console: " cmd
+done
 
 # send the command to the screen
 screen -r $screen_name -X stuff "$cmd"`echo -ne '\015'`
