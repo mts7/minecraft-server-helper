@@ -5,7 +5,6 @@
 #
 # TODO: add prompt for empty command
 # TODO: add shortcut commands (for give, tp, toggledownfall, etc.)
-# TODO: add file exists check
 # TODO: add screen check (maybe use mserver screen)
 # TODO: change sleep time to something smaller
 # TODO: make sure Minecraft is running (integerate with mserver)
@@ -17,6 +16,13 @@ screen_name='m2'
 # set to the path for latest.log (the file Minecraft uses to keep track of program output)
 file='/home/minecraft/logs/latest.log'
 ################################################################################
+
+echo "Press Ctrl+C to exit."
+
+while [ ! -e "$file" ] || [ ! -f "$file" ]; do
+    echo "$file does not exist."
+    read -p "Enter file name absolute path: " file
+done
 
 # get the first line of the output file and increment it 1 (to make it ready for the created command output)
 first_line=$(($(cat $file | wc -l) + 1))
