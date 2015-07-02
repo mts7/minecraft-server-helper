@@ -3,58 +3,130 @@
 #
 # Handle all the necessary server commands
 #    start | stop | restart | status | bfull | bquick | check
+#
+# TODO: add logging
+# TODO: add 2 minute time-out
+# TODO: send email on exception
+# TODO: restart screen session
 
 # Change to your Minecraft directory
 dir="/usr/games/minecraft"
 # Change to your Minecraft server file
-serverFile="craftbukkit-172.jar"
+serverFile="minecraft_server.1.8.7.jar"
 # Change to your screen name
 screenName="minecraft"
 # Change to your minimum memory
 memMin="256M"
 # Change to your maximum memory
 memMax="640M"
+# Change to your mserver log file
+logFile="${dir}/logs/mserver-check"
+# Change to your default logging preference
+logging=0
+# Change to your admin alert email addres
+adminEmail="minecraft@example.com"
 # Change to your backup directory
-backupDir="/usr/games/backups"
+backupDir="${dir}/backups"
 # Change to your tar backup exclude string
-excludeStr=" --exclude='plugins/dynmap' --exclude='logs'"
+excludeStr=" --exclude='logs' --exclude='crash-reports'"
+# Change to your java bin directory
+java_bin="/usr/bin/"
 # End changes
 
+command_string="${java_bin}java -Xms$memMin -Xmx$memMax -XX:+UseFastAccessorMethods -XX:+AggressiveOpts  -XX:+DisableExplicitGC -XX:+UseAdaptiveGCBoundary -XX:MaxGCPauseMillis=500 -XX:SurvivorRatio=16 -XX:+UseParallelGC -XX:UseSSE=3 -XX:ParallelGCThreads=2 -jar $dir/$serverFile nogui"
+
 dateFormat="%Y-%m-%d_%H:%M:%S"
+hasScreen=0
+
+function log() {
+    if [ "$logging" -ne "1" ]; then
+        return
+    fi
+
+    if [ -z "$1" ]; then
+        return
+    fi
+
+    now=$(date +"${dateFormat}")
+    echo "${now}: $1" >> $logFile
+}
 
 # Get pid of server
 function get_pid {
-    PID=`ps -elf | grep $serverFile | grep -v "grep" | awk '{print $4}'`
-    echo $PID > $dir/minecraft.pid
-    echo $PID
+    log "in get_pid"
+    PID=`ps -elf | grep "$serverFile" | grep -v "grep" | awk '{print $4}'`
+    if [ -z "$PID" ]; then
+        log "PID is empty"
+    else
+        echo $PID > $dir/minecraft.pid
+        echo $PID
+        log "found PID $PID and wrote to $dir/minecraft.pid"
+    fi
 }
 
 PID=$(get_pid)
 
-# Start server if not started already
-function server_start {
-    msg=$(server_status)
-    if [[ $msg == *Started* ]]
-    then
-        echo "Error starting server, server already started with ID $PID"
+function screen_check {
+    log "in screen_check"
+    numScreens=`screen -ls | grep -c "$screenName"`
+    log "screen $screenName was found $numScreens times"
+    if [ "$numScreens" -eq "0" ]; then
+        # start a new screen session
+        log "starting a new screen session for $screenName"
+        screen -S $screenName -d -m
+        log "screen $screenName should be started now"
     else
+        log "numScreens \(${numScreens}\) is not 0, so we assume there is only 1 screen session"
+    fi
+    echo "found $numScreens screens"
+    log "exiting screen_check"
+}
+
+function server_start {
+    log "in server_start"
+    msg=$(server_status)
+    log "$msg"
+    if [[ $msg == *Started* ]]; then
+        msg="Error starting server, server already started with ID $PID"
+        log "$msg"
+        echo $msg
+    else
+        log "server seems to be stopped, checking the screen session"
+        screen_check
+        log "about to stuff 2 commands to screen $screenName"
         screen -r $screenName -X stuff "cd $dir"`echo -ne '\015'`
-        screen -r $screenName -X stuff "java -Xms$memMin -Xmx$memMax -XX:+UseFastAccessorMethods -XX:+AggressiveOpts  -XX:+DisableExplicitGC -XX:+UseAdaptiveGCBoundary -XX:MaxGCPauseMillis=500 -XX:SurvivorRatio=16 -XX:+UseParallelGC -XX:UseSSE=3 -XX:ParallelGCThreads=2 -jar $dir/$serverFile nogui"`echo -ne '\015'`
+        screen -r $screenName -X stuff ${command_string}`echo -ne '\015'`
+        log "server should be running, get pid"
         get_pid
+        if [ -z "$PID" ]; then
+            log "could not start program ${command_string}"
+            screen -r $screenName -X stuff "exit"`echo -ne '\015'`
+            pkill -f "mserver check"
+            return
+        fi
+        log "get_pid set PID to $PID"
         echo "Please wait while the server prepares..."
-        while true
+        timeout=0
+        while [ $timeout -lt 60 ]
         do
             out=$(tail -n 1 $dir/logs/latest.log 2> /dev/null| grep Done)
             if [ -n "$out" ]; then
                 # keep going
                 newPid=$(get_pid)
-                echo "Started server with PID $newPid"
+                msg="Started server with PID $newPid"
+                log "$msg"
+                echo $msg
                 break;
             fi
             sleep 1s
-            echo "checking file..."
+            msg="checking file..."
+            log "$msg"
+            echo $msg
+            timeout=$((timeout + 1))
         done 
+        log "done waiting for server to load"
     fi
+    log "exiting server_start"
 }
 
 # Stop server if not stopped already
@@ -64,6 +136,7 @@ function server_stop {
         echo "server is already stopped"
     else
         echo "saving game and stopping server..."
+        screen_check
         screen -r $screenName -X stuff ''
         sleep 5
         newPid=$(get_pid)
@@ -105,6 +178,7 @@ function server_status {
 # Execute the backup script
 function server_backup {
     start=$(date +"${dateFormat}")
+    screen_check
     screen -r $screenName -X stuff "say Backup starting at ${start}. World no longer saving!... $(printf '\r')"
     screen -r $screenName -X stuff "save-off $(printf '\r')"
     screen -r $screenName -X stuff "save-all $(printf '\r')"
@@ -121,20 +195,64 @@ function server_backup {
     end=$(date +"${dateFormat}")
     screen -r $screenName -X stuff "say Backup complete at ${end}! World now saving. $(printf '\r')"
 
-    # remove backup files more than 6 days old
-    command="find $backupDir -mtime +6 -print | xargs /bin/rm -f"
+    # remove backup files more than 3 days old
+    command="find $backupDir -mtime +3 -print | xargs /bin/rm -f"
     echo "executing $command"
     eval $command
 }
 
 # Check to see if the server is started and start it if not
 function server_check {
-    if [ "$PID" == "" ]
-    then
-        server_start
-    else
-        echo "Server running with process $PID"
+    # check for log file existence
+    if [ -e $logFile ]; then
+        last=$(tail -1 $logFile)
+        if [[ "$last" = *"killing mserver check" ]]; then
+            rm -f $logFile
+        else
+            #echo 'The log file exists. There must be a problem. Send the contents to the admin.'
+            #cat $logFile
+            host=$(hostname)
+            if [ -z "$host" ]; then
+                host=$(getip)
+            fi
+            subject="Minecraft Server Error on $host"
+            from="minecraft_monitor@${host}"
+            msg=""
+            while read -r line
+            do
+               msg="${msg}${line}\n"
+            done < $logFile
+            mail="subject:${subject}\nfrom:${from}\n\n${msg}"
+            echo -e $mail | /usr/sbin/sendmail "$adminEmail"
+            #echo "sent email to $adminEmail" 
+            rm -f $logFile 
+        fi
     fi
+
+    logging=1
+
+    log "in server_check"
+
+    # TODO: make sure this process terminates at some point
+    if [ "$PID" == "" ]; then
+        log "$PID is empty, calling server_start"
+        server_start
+        log "done with server_start"
+    else
+        msg="Server running with process $PID"
+        log "$msg"
+        echo $msg
+    fi
+
+    # kill any running processes
+    log "killing mserver check"
+    pkill -f "mserver check"
+}
+
+function show_date {
+    now=$(date +"$dateFormat")
+    screen_check
+    screen -r $screenName -X stuff "say Current time: ${now} $(printf '\r')"
 }
 
 # Display acceptable parameters
@@ -182,6 +300,11 @@ do
         bfull)   server_backup ""; shift;;
         bquick)  server_backup "$excludeStr"; shift;;
         check)   server_check; shift;;
+        log)     cat $logFile; shift;;
+        date)    show_date; shift;;
+        screen)  screen_check; shift;;
+        cmd)     echo $command_string; shift;;
+        kill)    pkill -f "mserver check"; shift;;
         help)    list_commands; shift;;
     esac
     shift
