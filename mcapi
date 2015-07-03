@@ -1,0 +1,47 @@
+#!/bin/bash
+# Author: Mike Rodarte
+#
+# Provide the Minecraft server command as a parameter to the script and view the results.
+#
+# TODO: add shortcut commands (for give, tp, toggledownfall, etc.)
+# TODO: add screen check (maybe use mserver screen)
+# TODO: change sleep time to something smaller
+# TODO: make sure Minecraft is running (integerate with mserver)
+################################################################################
+
+################################ Configuration #################################
+# set the screen name to the same as used in mserver
+screen_name='m2'
+# set to the path for latest.log (the file Minecraft uses to keep track of program output)
+file='/home/minecraft/logs/latest.log'
+################################################################################
+
+echo "Press Ctrl+C to exit."
+
+while [ ! -e "$file" ] || [ ! -f "$file" ]; do
+    echo "$file does not exist."
+    read -p "Enter file name absolute path: " file
+done
+
+# get the first line of the output file and increment it 1 (to make it ready for the created command output)
+first_line=$(($(cat $file | wc -l) + 1))
+
+# use everything after the initial script call as the command to the server
+cmd=$@
+
+# verify there is a value to use
+while [ -z "$cmd" ]; do
+    read -p "Enter a command to pass to Minecraft console: " cmd
+done
+
+# send the command to the screen
+screen -r $screen_name -X stuff "$cmd"`echo -ne '\015'`
+
+# the line count is not available right away, so the script needs to wait
+sleep 1
+
+# determine the last line of the file since the update
+last_line=$(cat $file | wc -l)
+
+# display the output of the file from the first created line to the last line
+sed -n $first_line,${last_line}p $file

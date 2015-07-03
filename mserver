@@ -67,6 +67,7 @@ function get_pid {
 PID=$(get_pid)
 
 function screen_check {
+<<<<<<< HEAD
     log "in screen_check"
     numScreens=`screen -ls | grep -c "$screenName"`
     log "screen $screenName was found $numScreens times"
@@ -82,6 +83,16 @@ function screen_check {
     log "exiting screen_check"
 }
 
+=======
+    numScreens=`screen -ls | grep -c "$screenName"`
+    if [ "$numScreens" -eq "0" ]; then
+        # start a new screen session
+        screen -S $screenName -d -m
+    fi
+}
+
+# Start server if not started already
+>>>>>>> FETCH_HEAD
 function server_start {
     log "in server_start"
     msg=$(server_status)
@@ -91,9 +102,13 @@ function server_start {
         log "$msg"
         echo $msg
     else
+<<<<<<< HEAD
         log "server seems to be stopped, checking the screen session"
         screen_check
         log "about to stuff 2 commands to screen $screenName"
+=======
+        screen_check
+>>>>>>> FETCH_HEAD
         screen -r $screenName -X stuff "cd $dir"`echo -ne '\015'`
         screen -r $screenName -X stuff ${command_string}`echo -ne '\015'`
         log "server should be running, get pid"
@@ -135,6 +150,7 @@ function server_stop {
     if [ "$fpid" == "" ]; then
         echo "server is already stopped"
     else
+        screen_check
         echo "saving game and stopping server..."
         screen_check
         screen -r $screenName -X stuff ''
@@ -300,11 +316,15 @@ do
         bfull)   server_backup ""; shift;;
         bquick)  server_backup "$excludeStr"; shift;;
         check)   server_check; shift;;
+<<<<<<< HEAD
         log)     cat $logFile; shift;;
         date)    show_date; shift;;
         screen)  screen_check; shift;;
         cmd)     echo $command_string; shift;;
         kill)    pkill -f "mserver check"; shift;;
+=======
+        screen)  screen_check; shift;;
+>>>>>>> FETCH_HEAD
         help)    list_commands; shift;;
     esac
     shift
