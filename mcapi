@@ -6,7 +6,8 @@
 # TODO: add shortcut commands (for give, tp, toggledownfall, etc.)
 # TODO: add screen check (maybe use mserver screen)
 # TODO: change sleep time to something smaller
-# TODO: make sure Minecraft is running (integerate with mserver)
+# TODO: make sure Minecraft is running (integrate with mserver)
+# TODO: make this an interactive script
 ################################################################################
 
 ################################ Configuration #################################
@@ -16,32 +17,267 @@ screen_name='m2'
 file='/home/minecraft/logs/latest.log'
 ################################################################################
 
-echo "Press Ctrl+C to exit."
+# Global Variables
+cmd=''
+enchId=0
+enchLvl=0
+player='mts7777777'
 
-while [ ! -e "$file" ] || [ ! -f "$file" ]; do
+
+function displayOptionsGive {
+  echo 'Giving Menu'
+  echo
+  items=(axe pickaxe shovel hoe fishing sword bow helmet chestplate pants boots shield)
+  for item in ${items[@]}; do
+    echo $item
+  done
+
+  echo
+  echo 'Example:'
+  echo '  chestplate mts7777777 (give an enchanted chestplate to mts7777777)'
+  echo '  helmet (give an enchanted helmet to the default player)'
+  echo
+
+  read -p "Item and Player [$player]: " item givePlayer
+
+  # use default player if none is specified
+  givePlayer=${givePlayer:-$player}
+  give $item $givePlayer
+
+  displayPrompt
+}
+
+
+function displayPrompt {
+  read -e -p 'Enter a command to pass to Minecraft console: ' cmd
+
+  # handle response
+  case "$cmd" in
+    menu) echo;;
+    give) displayOptionsGive;;
+    player) setPlayer;;
+    start) serverStart;;
+    stop) serverStop;;
+    quit)
+      echo 'Exiting Minecraft API'
+      exit 0
+      ;;
+    *) execute; displayPrompt;;
+  esac
+}
+
+
+function enchantId() {
+  case "$1" in
+    protection) enchId=0; enchLvl=4;; # armor
+    fire-protection) enchId=1; enchLvl=4;; #armor
+    feather-falling) enchId=2; enchLvl=4;; # boots
+    blast-protection) enchId=3; enchLvl=4;; # armor
+    projectile-protection) enchId=4; enchLvl=4;; # armor
+    respiration) enchId=5; enchLvl=3;; # helmet
+    aqua-affinity) enchId=6; enchLvl=1;; # helmet
+    thorns) enchId=7; enchLvl=3;; # armor
+    depth-strider) enchId=8; enchLvl=3;; # boots
+    frost-walker) enchId=9; enchLvl=2;; # boots
+    sharpness) enchId=16; enchLvl=5;; # increases damage
+    smite) enchId=17; enchLvl=5;; # increases damage to undead mobs - sword and axe
+    bane-of-arthropods) enchId=18; enchLvl=5;; #increases damage to arthropod mobs (spiders, silverfish, endermites) - sword and axe
+    knockback) enchId=19; enchLvl=2;; # sword
+    fire-aspect) enchId=20; enchLvl=2;; # sword
+    looting) enchId=21; enchLvl=3;; # sword
+    efficiency) enchId=32; enchLvl=5;; # pickaxe, shovel, axe, sheers
+    silk-touch) enchId=33; enchLvl=1;; # pickaxe, shovel, axe
+    unbreaking) enchId=34; enchLvl=3;; # tools, fishing rod, armor, weapons
+    fortune) enchId=35; enchLvl=3;; # pickaxe, shovel, axe
+    power) enchId=48; enchLvl=5;; # increases damage - bow
+    punch) enchId=49; enchLvl=2;; # increases knockback - bow
+    flame) enchId=50; enchLvl=1;; # bow
+    infinity) enchId=51; enchLvl=1;; # bow
+    luck-of-the-sea) enchId=61; enchLvl=3;; # fishing rod
+    lure) enchId=62; enchLvl=3;; # fishing rod
+    mending) enchId=70; enchLvl=1; # tools, armor, weapons
+  esac
+}
+
+
+function execute() {
+  # send the command to the screen
+  screen -r $screen_name -X stuff "$cmd"`echo -ne '\015'`
+
+  # the line count is not available right away, so the script needs to wait
+  wait=${1-1}
+  sleep $wait
+
+  # determine the last line of the file since the update
+  last_line=$(cat $file | wc -l)
+
+  # display the output of the file from the first created line to the last line
+  sed -n $first_line,${last_line}p $file
+}
+
+
+function give() {
+  if [ -z "$2" ]; then
+    givePlayer="$player"
+  else
+    givePlayer="$2"
+  fi
+
+  echo "giving $1 to $2"
+
+  case "$1" in
+    # tools
+    axe)
+      cmd="give $givePlayer minecraft:diamond_axe 1 0 {display:{Name:'Paul Bunyan'},ench:["
+      enchantments=(efficiency unbreaking fortune mending smite bane-of-arthropods)
+      ;;
+    pickaxe)
+      cmd="give $givePlayer minecraft:diamond_pickaxe 1 0 {display:{Name:'Black Bart'},ench:["
+      enchantments=(efficiency unbreaking fortune mending)
+      ;;
+    shovel)
+      cmd="give $givePlayer minecraft:diamond_shovel 1 0 {display:{Name:'Frederick Winslow Taylor'},ench:["
+      enchantments=(efficiency unbreaking fortune mending)
+      ;;
+    fishing)
+      cmd="give $givePlayer minecraft:fishing_rod 1 0 {display:{Name:'Peter'},ench:["
+      enchantments=(luck-of-the-sea lure unbreaking mending)
+      ;;
+    hoe)
+      cmd="give $givePlayer minecraft:diamond_hoe 1 0 {display:{Name:'Old Mac Donald'},ench:["
+      enchantments=(unbreaking mending)
+      ;;
+
+    # weapons
+    bow)
+      cmd="give $givePlayer minecraft:bow 1 0 {display:{Name:'Artemis'},ench:["
+      enchantments=(unbreaking power punch flame infinity mending)
+      ;;
+    sword)
+      cmd="give $givePlayer minecraft:diamond_sword 1 0 {display:{Name:'David'},ench:["
+      enchantments=(smite bane-of-arthropods knockback fire-aspect looting unbreaking mending)
+      ;;
+
+    # armor
+    helmet)
+      cmd="give $givePlayer minecraft:diamond_helmet 1 0 {display:{Name:'Newton'},ench:["
+      enchantments=(protection fire-protection blast-protection projectile-protection respiration aqua-affinity thorns unbreaking mending)
+      ;;
+    chestplate)
+      cmd="give $givePlayer minecraft:diamond_chestplate 1 0 {display:{Name:'Tarzan'},ench:["
+      enchantments=(protection fire-protection blast-protection projectile-protection thorns unbreaking mending)
+      ;;
+    pants)
+      cmd="give $givePlayer minecraft:diamond_leggings 1 0 {display:{Name:'Pinky'},ench:["
+      enchantments=(protection fire-protection blast-protection projectile-protection thorns unbreaking mending)
+      ;;
+    boots)
+      cmd="give $givePlayer minecraft:diamond_boots 1 0 {display:{Name:'Gump'},ench:["
+      enchantments=(protection fire-protection blast-protection projectile-protection thorns unbreaking mending feather-falling depth-strider frost-walker)
+      ;;
+    shield)
+      cmd="give $givePlayer minecraft:shield 1 0 {display:{Name:'Tracey'},ench:["
+      enchantments=(unbreaking mending)
+      ;;
+
+    # kits
+    tools)
+      items=(axe pickaxe shovel hoe fishing)
+      for item in ${items[@]}; do
+        give $item $givePlayer
+        execute
+      done
+      return
+      ;;
+    weapons)
+      items=(sword bow)
+      for item in ${items[@]}; do
+        give $item $givePlayer
+        execute
+      done
+      return
+      ;;
+    armor)
+      items=(helmet chestplate pants boots)
+      for item in ${items[@]}; do
+        give $item $givePlayer
+        execute
+      done
+      return
+      ;;
+    full)
+      items=(tools weapons armor)
+      for item in ${items[@]}; do
+        give $item $givePlayer
+        execute
+      done
+      return
+      ;;
+
+    # default
+    *) cmd="give $givePlayer $1";;
+  esac
+
+  # add enchantments to items (if available)
+  numEnchantments=${#enchantments[@]}
+  if [ $numEnchantments -gt 0 ]; then
+    for i in ${enchantments[@]}; do
+      enchantId $i
+      cmd="${cmd}{id:${enchId},lvl:${enchLvl}},"
+    done
+    echo "built cmd $cmd"
+    # remove trailing comma and add unbreakable and end
+    cmd="${cmd%,}],Unbreakable:1}"
+  fi
+
+  execute
+}
+
+
+function setFile {
+  echo "Press Ctrl+C to exit."
+
+  while [ ! -e "$file" ] || [ ! -f "$file" ]; do
     echo "$file does not exist."
-    read -p "Enter file name absolute path: " file
-done
+    read -e -p "Enter Minecraft log file name absolute path: " file
+  done
 
-# get the first line of the output file and increment it 1 (to make it ready for the created command output)
-first_line=$(($(cat $file | wc -l) + 1))
+  # get the first line of the output file and increment it 1 (to make it ready for the created command output)
+  first_line=$(($(cat $file | wc -l) + 1))
+}
 
-# use everything after the initial script call as the command to the server
-cmd=$@
 
-# verify there is a value to use
-while [ -z "$cmd" ]; do
-    read -p "Enter a command to pass to Minecraft console: " cmd
-done
+function setPlayer {
+  read -p 'Enter player name: ' name
+  if [ -z "$name" ]; then
+    player="$name"
+  else
+    player='@p'
+  fi
 
-# send the command to the screen
-screen -r $screen_name -X stuff "$cmd"`echo -ne '\015'`
+  echo "set player to $player"
 
-# the line count is not available right away, so the script needs to wait
-sleep 1
+  displayPrompt
+}
 
-# determine the last line of the file since the update
-last_line=$(cat $file | wc -l)
 
-# display the output of the file from the first created line to the last line
-sed -n $first_line,${last_line}p $file
+function serverStart {
+  cmd=$(/home/minecraft/mserver cmd)
+  execute 20
+
+  displayPrompt
+}
+
+
+function serverStop {
+  # TODO: make this work somehow
+  cmd="^C"
+  execute
+
+  displayPrompt
+}
+
+
+# process
+setFile
+displayPrompt
