@@ -14,7 +14,7 @@ while [ -f $logFile ]; do
   last=$(tail -1 $logFile)
 
   # check to see if $commandName exists in $last
-  if [[ "$last" -ne "$lastLine" -a "$last" == *"$commandName"* ]]; then
+  if [ "$last" != "$lastLine" ] && [[ "$last" == *"$commandName"* ]]; then
     # get whatever follows $commandName
     position=$(echo `echo "$last" | grep -aob "$commandName" | grep -oE '^[0-9]+'`)
     posCommand=$(( $position + ${#commandName} ))
