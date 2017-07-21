@@ -240,51 +240,63 @@ var enchantments = {
 var items = {
   'sword': {
     name: 'diamond_sword',
-    qty: 1
+    qty: 1,
+    display: 'Sword of the Spirit'
   },
   'axe': {
     name: 'diamond_axe',
-    qty: 1
+    qty: 1,
+    display: 'Fast Chopper'
   },
   'pickaxe': {
     name: 'diamond_pickaxe',
-    qty: 1
+    qty: 1,
+    display: 'Fast Picker'
   },
   'shovel': {
     name: 'diamond_shovel',
-    qty: 1
+    qty: 1,
+    display: 'Fast Digger'
   },
   'bow': {
     name: 'bow',
-    qty: 1
+    qty: 1,
+    display: 'Fire Bow of Artemis'
   },
   'hoe': {
     name: 'diamond_hoe',
-    qty: 1
+    qty: 1,
+    display: 'Fast Gardener'
   },
   'helmet': {
     name: 'diamond_helmet',
-    qty: 1
+    qty: 1,
+    display: 'Helmet of Salvation and Breathing'
   },
   'chestplate': {
     name: 'diamond_chestplate',
-    qty: 1
+    qty: 1,
+    display: 'Breastplate of Righteousness and Major Defense'
   },
   'leggings': {
     name: 'diamond_leggings',
-    qty: 1
+    qty: 1,
+    display: 'Shiny Pants'
   },
   'boots': {
     name: 'diamond_boots',
-    qty: 1
+    qty: 1,
+    display: 'Boots of the Gospel and Water Walking'
   },
   'arrow': {
     name: 'arrow',
-    qty: 64
+    qty: 64,
+    display: 'Arrows of Legolas'
   },
   'hopper': {
     name: 'hopper',
-    qty: 64
+    qty: 64,
+    display: 'Hopper'
   }
 };
 
@@ -294,7 +306,7 @@ for (var item in items) {
     continue;
   }
   
-  var cmd = '/give @p minecraft:' + items[item].name + ' ' + items[item].qty;
+  var cmd = '/give @p minecraft:' + items[item].name + ' ' + items[item].qty + '{display:{Name:"' + items[item].display + '"}';
   var enchants = [];
   for (var enchantment in enchantments) {
     if (!enchantments.hasOwnProperty(enchantment)) {
@@ -308,10 +320,12 @@ for (var item in items) {
   } // end enchantments
   
   if (enchants.length > 0) {
-    cmd += ' {ench[';
+    cmd += ',ench[';
     cmd += enchants.join(',');
-    cmd += ']}';
+    cmd += ']';
   }
+  
+  cmd += '}';
   
   console.log(cmd);
 }
