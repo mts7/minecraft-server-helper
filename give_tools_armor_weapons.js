@@ -306,7 +306,7 @@ for (var item in items) {
     continue;
   }
   
-  var cmd = '/give @p minecraft:' + items[item].name + ' ' + items[item].qty + '{display:{Name:"' + items[item].display + '"}';
+  var cmd = '/give @p minecraft:' + items[item].name + ' ' + items[item].qty + ' 0 {display:{Name:"' + items[item].display + '"}';
   var enchants = [];
   for (var enchantment in enchantments) {
     if (!enchantments.hasOwnProperty(enchantment)) {
@@ -320,7 +320,7 @@ for (var item in items) {
   } // end enchantments
   
   if (enchants.length > 0) {
-    cmd += ',ench[';
+    cmd += ',ench:[';
     cmd += enchants.join(',');
     cmd += ']';
   }
