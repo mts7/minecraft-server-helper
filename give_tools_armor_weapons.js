@@ -243,30 +243,10 @@ var items = {
     qty: 1,
     display: 'Sword of the Spirit'
   },
-  'axe': {
-    name: 'diamond_axe',
-    qty: 1,
-    display: 'Fast Chopper'
-  },
-  'pickaxe': {
-    name: 'diamond_pickaxe',
-    qty: 1,
-    display: 'Fast Picker'
-  },
-  'shovel': {
-    name: 'diamond_shovel',
-    qty: 1,
-    display: 'Fast Digger'
-  },
   'bow': {
     name: 'bow',
     qty: 1,
     display: 'Fire Bow of Artemis'
-  },
-  'hoe': {
-    name: 'diamond_hoe',
-    qty: 1,
-    display: 'Fast Gardener'
   },
   'helmet': {
     name: 'diamond_helmet',
@@ -288,15 +268,40 @@ var items = {
     qty: 1,
     display: 'Boots of the Gospel and Water Walking'
   },
-  'arrow': {
-    name: 'arrow',
-    qty: 64,
-    display: 'Arrows of Legolas'
+  'shield': {
+    name: 'shield',
+    qty: 1,
+    display: 'Shield of Faith and Regeneration'
+  },
+  'shovel': {
+    name: 'diamond_shovel',
+    qty: 1,
+    display: 'Fast Digger'
+  },
+  'pickaxe': {
+    name: 'diamond_pickaxe',
+    qty: 1,
+    display: 'Fast Picker'
+  },
+  'axe': {
+    name: 'diamond_axe',
+    qty: 1,
+    display: 'Fast Chopper'
+  },
+  'hoe': {
+    name: 'diamond_hoe',
+    qty: 1,
+    display: 'Fast Gardener'
   },
   'hopper': {
     name: 'hopper',
     qty: 64,
     display: 'Hopper'
+  },
+  'arrow': {
+    name: 'arrow',
+    qty: 64,
+    display: 'Arrows of Legolas'
   }
 };
 
