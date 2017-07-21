@@ -127,7 +127,8 @@ var enchantments = {
   },
   mending: {
     item: [
-      'shield'
+      'shield',
+      'elytra'
     ],
     id: 70,
     lvl: 1
@@ -273,6 +274,11 @@ var items = {
     qty: 1,
     display: 'Shield of Faith and Regeneration'
   },
+  'elytra': {
+    name: 'elytra',
+    qty: 1,
+    display: 'Wings of the Eagle'
+  },
   'shovel': {
     name: 'diamond_shovel',
     qty: 1,
@@ -302,6 +308,11 @@ var items = {
     name: 'arrow',
     qty: 64,
     display: 'Arrows of Legolas'
+  },
+  'stone': {
+    name: 'stone',
+    qty: 64,
+    display: 'Stone'
   }
 };
 
