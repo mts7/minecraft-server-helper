@@ -85,7 +85,7 @@ var enchantments = {
   },
   frostWalker: {
     item: [
-      'boots'
+      //'boots'
     ],
     id: 9,
     lvl: 2
@@ -272,6 +272,10 @@ var items = {
   },
   'leggings': {
     name: 'diamond_leggings',
+    qty: 1
+  },
+  'boots': {
+    name: 'diamond_boots',
     qty: 1
   },
   'arrow': {
