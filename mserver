@@ -4,6 +4,10 @@
 # Handle all the necessary server commands
 #    start | stop | restart | status | bfull | bquick | check
 #
+# TODO: add logging
+# TODO: add 2 minute time-out
+# TODO: send email on exception
+# TODO: restart screen session
 
 # Change to your Minecraft directory
 dir="/usr/games/minecraft"
@@ -29,7 +33,7 @@ excludeStr=" --exclude='logs' --exclude='crash-reports'"
 java_bin="/usr/bin/"
 # End changes
 
-command_string="${java_bin}java -Xms$memMin -Xmx$memMax -XX:+UseFastAccessorMethods -XX:+AggressiveOpts  -XX:+DisableExplicitGC -XX:+UseAdaptiveGCBoundary -XX:MaxGCPauseMillis=500 -XX:SurvivorRatio=16 -XX:+UseParallelGC -XX:UseSSE=3 -XX:ParallelGCThreads=2 -jar $dir/$serverFile nogui"
+command_string="${java_bin}java -server -Xms$memMin -Xmx$memMax -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSIncrementalPacing -XX:+UseFastAccessorMethods -XX:+AggressiveOpts  -XX:+DisableExplicitGC -XX:+UseAdaptiveGCBoundary -XX:MaxGCPauseMillis=500 -XX:SurvivorRatio=16 -XX:+UseParallelGC -XX:UseSSE=3 -XX:ParallelGCThreads=2 -jar $dir/$serverFile nogui"
 
 dateFormat="%Y-%m-%d_%H:%M:%S"
 hasScreen=0
@@ -223,7 +227,7 @@ function server_check {
             mail="subject:${subject}\nfrom:${from}\n\n${msg}"
             echo -e $mail | /usr/sbin/sendmail "$adminEmail"
             #echo "sent email to $adminEmail" 
-            rm -f $logFile 
+            rm -f $logFile
         fi
     fi
 
