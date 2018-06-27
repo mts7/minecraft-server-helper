@@ -6,7 +6,7 @@
 serverDir='/home/minecraft/'
 logDir="${serverDir}logs/"
 logFile="${logDir}latest.log"
-commandName='/mcapi'
+commandName='mcapi'
 lastLine=''
 
 # execute the listener while the log file exists
@@ -20,7 +20,7 @@ while [ -f $logFile ]; do
     posCommand=$(( $position + ${#commandName} ))
     cmd="${last:$posCommand}"
 
-    ${serverDir}mcapi $cmd
+    "${serverDir}/minecraft-server-helper/mcapi" $cmd
 
     # do not keep doing this same command
     lastLine="$last"

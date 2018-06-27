@@ -56,6 +56,7 @@ function displayPrompt {
     menu) echo;;
     give) displayOptionsGive;;
     player) setPlayer;;
+    tp) teleport;;
     start) serverStart;;
     stop) serverStop;;
     quit)
@@ -95,12 +96,19 @@ function enchantId() {
     infinity) enchId=51; enchLvl=1;; # bow
     luck-of-the-sea) enchId=61; enchLvl=3;; # fishing rod
     lure) enchId=62; enchLvl=3;; # fishing rod
-    mending) enchId=70; enchLvl=1; # tools, armor, weapons
+    mending) enchId=70; enchLvl=1;; # tools, armor, weapons
+    channeling) enchId=68; enchLvl=1;; # trident
+    impaling) enchId=66; enchLvl=5;; # trident
+    loyalty) enchId=65; enchLvl=3;; # trident
+    riptide) enchId=67; enchLvl=3;; # trident
+    sweeping) enchId=22; enchLvl=3;; # sword
   esac
 }
 
 
 function execute() {
+  echo "executing command ${cmd}"
+
   # send the command to the screen
   screen -r $screen_name -X stuff "$cmd"`echo -ne '\015'`
 
@@ -123,85 +131,108 @@ function give() {
     givePlayer="$2"
   fi
 
-  echo "giving $1 to $2"
+  if [ -z "${givePlayer}" ]; then
+    givePlayer="@p"
+  fi
+
+  echo "giving $1 to $givePlayer"
 
   case "$1" in
     # tools
     axe)
-      cmd="give $givePlayer minecraft:diamond_axe 1 0 {display:{Name:'Paul Bunyan'},ench:["
+      cmd="give $givePlayer minecraft:diamond_axe 1 0 {display:{Name:\"Paul Bunyan\"},ench:["
       enchantments=(efficiency unbreaking fortune mending smite bane-of-arthropods)
       ;;
     pickaxe)
-      cmd="give $givePlayer minecraft:diamond_pickaxe 1 0 {display:{Name:'Black Bart'},ench:["
+      cmd="give $givePlayer minecraft:diamond_pickaxe 1 0 {display:{Name:\"Black Bart\"},ench:["
       enchantments=(efficiency unbreaking fortune mending)
       ;;
     shovel)
-      cmd="give $givePlayer minecraft:diamond_shovel 1 0 {display:{Name:'Frederick Winslow Taylor'},ench:["
+      cmd="give $givePlayer minecraft:diamond_shovel 1 0 {display:{Name:\"Frederick Winslow Taylor\"},ench:["
       enchantments=(efficiency unbreaking fortune mending)
       ;;
     fishing)
-      cmd="give $givePlayer minecraft:fishing_rod 1 0 {display:{Name:'Peter'},ench:["
+      cmd="give $givePlayer minecraft:fishing_rod 1 0 {display:{Name:\"Peter\"},ench:["
       enchantments=(luck-of-the-sea lure unbreaking mending)
       ;;
     hoe)
-      cmd="give $givePlayer minecraft:diamond_hoe 1 0 {display:{Name:'Old Mac Donald'},ench:["
+      cmd="give $givePlayer minecraft:diamond_hoe 1 0 {display:{Name:\"Old Mac Donald\"},ench:["
       enchantments=(unbreaking mending)
+      ;;
+    shears)
+      cmd="give $givePlayer minecraft:shears 1 0 {display:{Name:\"Cruella\"},ench:["
+      enchantments=(efficiency unbreaking mending)
       ;;
 
     # weapons
     bow)
-      cmd="give $givePlayer minecraft:bow 1 0 {display:{Name:'Artemis'},ench:["
+      cmd="give $givePlayer minecraft:bow 1 0 {display:{Name:\"Artemis\"},ench:["
       enchantments=(unbreaking power punch flame infinity mending)
       ;;
     sword)
-      cmd="give $givePlayer minecraft:diamond_sword 1 0 {display:{Name:'David'},ench:["
-      enchantments=(smite bane-of-arthropods knockback fire-aspect looting unbreaking mending)
+      cmd="give $givePlayer minecraft:diamond_sword 1 0 {display:{Name:\"David\"},ench:["
+      enchantments=(smite bane-of-arthropods knockback fire-aspect looting sweeping unbreaking mending)
+      ;;
+    trident)
+      cmd="give $givePlayer minecraft:trident 1 0 {display:{Name:\"Triton Lightning\"},ench:["
+      enchantments=(loyalty channeling impaling unbreaking mending)
+      ;;
+    tridentw)
+      cmd="give $givePlayer minecraft:trident 1 0 {display:{Name:\"Triton Water\"},ench:["
+      enchantments=(riptide impaling unbreaking mending)
       ;;
 
     # armor
     helmet)
-      cmd="give $givePlayer minecraft:diamond_helmet 1 0 {display:{Name:'Newton'},ench:["
+      cmd="give $givePlayer minecraft:diamond_helmet 1 0 {display:{Name:\"Newton\"},ench:["
       enchantments=(protection fire-protection blast-protection projectile-protection respiration aqua-affinity thorns unbreaking mending)
       ;;
     chestplate)
-      cmd="give $givePlayer minecraft:diamond_chestplate 1 0 {display:{Name:'Tarzan'},ench:["
+      cmd="give $givePlayer minecraft:diamond_chestplate 1 0 {display:{Name:\"Tarzan\"},ench:["
       enchantments=(protection fire-protection blast-protection projectile-protection thorns unbreaking mending)
       ;;
     pants)
-      cmd="give $givePlayer minecraft:diamond_leggings 1 0 {display:{Name:'Pinky'},ench:["
+      cmd="give $givePlayer minecraft:diamond_leggings 1 0 {display:{Name:\"Pinky\"},ench:["
       enchantments=(protection fire-protection blast-protection projectile-protection thorns unbreaking mending)
       ;;
     boots)
-      cmd="give $givePlayer minecraft:diamond_boots 1 0 {display:{Name:'Gump'},ench:["
+      cmd="give $givePlayer minecraft:diamond_boots 1 0 {display:{Name:\"Gump\"},ench:["
       enchantments=(protection fire-protection blast-protection projectile-protection thorns unbreaking mending feather-falling depth-strider frost-walker)
       ;;
     shield)
-      cmd="give $givePlayer minecraft:shield 1 0 {display:{Name:'Tracey'},ench:["
+      cmd="give $givePlayer minecraft:shield 1 0 {display:{Name:\"Faith\"},ench:["
       enchantments=(unbreaking mending)
+      ;;
+    elytra)
+      cmd="give $givePlayer minecraft:elytra 1 0 {display:{Name:\"Tomlin\"},ench:["
+      enchantments=(unbreaking mending)
+      ;;
+
+    # miscellaneous
+    torch)
+      cmd="give $givePlayer minecraft:torch 64 0"
+      enchantments=()
       ;;
 
     # kits
     tools)
-      items=(axe pickaxe shovel hoe fishing)
+      items=(axe pickaxe shovel hoe fishing shears)
       for item in ${items[@]}; do
         give $item $givePlayer
-        execute
       done
       return
       ;;
     weapons)
-      items=(sword bow)
+      items=(sword bow trident tridentw)
       for item in ${items[@]}; do
         give $item $givePlayer
-        execute
       done
       return
       ;;
     armor)
-      items=(helmet chestplate pants boots)
+      items=(helmet chestplate pants boots shield elytra)
       for item in ${items[@]}; do
         give $item $givePlayer
-        execute
       done
       return
       ;;
@@ -209,13 +240,15 @@ function give() {
       items=(tools weapons armor)
       for item in ${items[@]}; do
         give $item $givePlayer
-        execute
       done
       return
       ;;
 
     # default
-    *) cmd="give $givePlayer $1";;
+    *)
+      echo "Generic item alert: [${1}] [${2}] [${3}]"
+      cmd="give $givePlayer $1 $3"
+      ;;
   esac
 
   # add enchantments to items (if available)
@@ -228,6 +261,17 @@ function give() {
     echo "built cmd $cmd"
     # remove trailing comma and add unbreakable and end
     cmd="${cmd%,}],Unbreakable:1}"
+  fi
+
+  execute
+}
+
+
+function teleport {
+  if [ "$#" -gt 2 ]; then
+    cmd="tp $1 $2 $3 $4"
+  else
+    cmd="tp $1 $2"
   fi
 
   execute
@@ -248,16 +292,20 @@ function setFile {
 
 
 function setPlayer {
-  read -p 'Enter player name: ' name
-  if [ -z "$name" ]; then
-    player="$name"
+  if [ -z "$1" ]; then
+    read -p 'Enter player name: ' name
+    if [ -z "$name" ]; then
+      player="$name"
+    else
+      player='@p'
+    fi
+
+    displayPrompt
   else
-    player='@p'
+    player="$1"
   fi
 
   echo "set player to $player"
-
-  displayPrompt
 }
 
 
@@ -280,4 +328,24 @@ function serverStop {
 
 # process
 setFile
-displayPrompt
+
+if [ "$#" -gt 0 ]; then
+  # command is first parameter
+  # if command is give
+  # second parameter is item
+  # third parameter is player
+  echo "There are command line parameters: [${1}] [${2}] [${3}] [${4}]"
+  case "$1" in
+    give)
+      give $2 $3 "$4"
+      ;;
+    player)
+      setPlayer $2
+      ;;
+    tp)
+      teleport $2 $3 $4 $5
+      ;;
+  esac
+else
+  displayPrompt
+fi
