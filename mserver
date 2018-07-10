@@ -119,10 +119,14 @@ function server_start {
                 echo $msg
                 break;
             fi
+            log "checking file (${timeout})"
+            remainder=$(expr ${timeout} % 2)
+            if [ ${remainder} -eq 1 ]; then
+              printf "checking file...\\r"
+            else
+              printf "checking file.. \\r"
+            fi
             sleep 1s
-            msg="checking file..."
-            log "$msg"
-            echo $msg
             timeout=$((timeout + 1))
         done 
         log "done waiting for server to load"
