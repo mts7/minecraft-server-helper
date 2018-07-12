@@ -213,6 +213,10 @@ function give() {
       cmd="give $givePlayer minecraft:torch 64 0"
       enchantments=()
       ;;
+    chest)
+      cmd="give ${givePlayer} minecraft:chest 2 0"
+      enchantments=()
+      ;;
 
     # kits
     tools)
