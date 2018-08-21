@@ -8,7 +8,7 @@ thisDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 . ${thisDir}/minecraft.conf
 
 # set command string from variables
-commandString="${javaBin}java -server -Xms$memMin -Xmx$memMax -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSIncrementalPacing -XX:+UseFastAccessorMethods -XX:+AggressiveOpts  -XX:+DisableExplicitGC -XX:+UseAdaptiveGCBoundary -XX:MaxGCPauseMillis=500 -XX:SurvivorRatio=16 -XX:+UseParallelGC -XX:UseSSE=3 -XX:ParallelGCThreads=2 -jar $thisDir/$serverFile nogui"
+commandString="${javaBin}java -server -Xms${memMin} -Xmx${memMax} -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSIncrementalPacing -XX:+UseFastAccessorMethods -XX:+AggressiveOpts -XX:+DisableExplicitGC -XX:+UseAdaptiveGCBoundary -XX:MaxGCPauseMillis=500 -XX:SurvivorRatio=16 -XX:UseSSE=3 -jar ${serverFile} nogui"
 
 # script variables
 dateFormat="%Y-%m-%d_%H:%M:%S"
@@ -20,7 +20,7 @@ function serverStatus {
   # get the script name
   script=$(basename "${0}")
   # get the number of instances of the command string
-  commandCount=$(ps -e | grep "${commandString}" | grep -v "${script}" | grep -v 'grep' | wc -l)
+  commandCount=$(ps -elf | grep "${serverFile}" | grep -v "${script}" | grep -v 'grep' | wc -l)
 
   # handle the command count
   if [ "${commandCount}" -eq 1 ]; then
@@ -69,13 +69,18 @@ function serverStart {
   fi
 
   # send command to screen
-  screen -dR "${screenName}" -X stuff "cd $thisDir"`echo -ne '\015'`
-  screen -dR "${screenName}" -X stuff "${commandString}"`echo -ne '\015'`
+  echo "Sending command string to ${screenName}"
+  screen -r ${screenName} -X stuff "cd ${directory}"`echo -ne '\015'`
+  screen -r ${screenName} -X stuff "${commandString}"`echo -ne '\015'`
 
   # verify server is started
+  sleep 3
   serverStatus
   if [ "${serverStarted}" -eq 1 ]; then
     echo "Server is running"
+  else
+    echo "Server is not running"
+    exit 4
   fi
 }
 
@@ -97,6 +102,7 @@ function serverStop {
 
   screen -dR "${screenName}" -X stuff "^C"`echo -ne '\015'`
 
+  sleep 3
   serverStatus
 
   if [ "${serverStarted}" -eq 0 ]; then
