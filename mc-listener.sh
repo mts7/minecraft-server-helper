@@ -3,8 +3,8 @@
 #
 # Listen to the log file and respond as necessary.
 
-serverDir='/home/minecraft/'
-logDir="${serverDir}logs/"
+serverDir='/home/minecraft/minecraft'
+logDir="${serverDir}/logs/"
 logFile="${logDir}latest.log"
 commandName='mcapi'
 lastLine=''

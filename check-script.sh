@@ -33,6 +33,7 @@ if [ "${needToStart}" -eq 1 ]; then
   if [ -x ${command} ]; then
     # execute the script in the background
     ${fullPath}${script} &
+    echo "Script ${script} should be running in the background"
   else
     echo "Could not find ${command} to execute"
   fi
