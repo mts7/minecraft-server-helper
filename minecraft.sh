@@ -10,7 +10,6 @@ thisDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 # set command string from variables
 commandString=''
-buildCommand
 
 # script variables
 dateFormat="%Y-%m-%d_%H:%M:%S"
@@ -264,6 +263,8 @@ function sendDate {
     screen -r ${screenName} -X stuff "say Current time: ${now} $(printf '\r')"
   fi
 }
+
+buildCommand
 
 # process command line arguments
 if [ -n "${1}" ]; then
