@@ -15,7 +15,7 @@ commandString=''
 dateFormat="%Y-%m-%d_%H:%M:%S"
 hasScreen=0
 serverStarted=0
-version='0.37'
+version='0.39'
 
 #######################################
 # Build the command string
